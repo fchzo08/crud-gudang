@@ -12,7 +12,6 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cors({
   origin: '*', 
 }));
-app.use(express.static('public'));
 
 async function verifyToken(req, res, next) {
   const token = req.headers['authorization'];
