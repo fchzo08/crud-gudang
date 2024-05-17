@@ -45,6 +45,8 @@ app.post('/db/register', async (req, res) => {
     try {
       await mysqlConnection.query(query, [username, hashedPassword]);
       res.status(201).send('User registered successfully');
+      const { response } = "Sukses";
+              res.json({ response });
     } catch (error) {
       console.error('Error registering user:', error);
       res.status(500).send('Error registering user');
