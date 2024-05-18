@@ -233,6 +233,24 @@ app.post('/db/sewa', verifyToken, (req, res) => {
   );
 });
 
+app.post('/db/sewa/:id', (req, res) => {
+  const rentalId = req.params.id;
+  const query = `
+    SELECT penyewaan.*, gudang.name AS nama_gudang 
+    FROM penyewaan 
+    JOIN gudang ON penyewaan.id_gudang = gudang.id_gudang 
+    WHERE penyewaan.id_penyewaan = ?;
+  `;
+
+  mysqlConnection.query(query, [rentalId], (err, results) => {
+    if (err) {
+      res.status(500).json({ message: 'Error fetching rental' });
+    } else {
+      res.json(results);
+    }
+  });
+});
+
 // Endpoint update sewa
 app.put('/db/sewa/:id',verifyToken, (req, res) => {
     const { penyewa, status, } = req.body;
