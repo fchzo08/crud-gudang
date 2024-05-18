@@ -233,7 +233,7 @@ app.post('/db/sewa', verifyToken, (req, res) => {
   );
 });
 
-app.post('/db/sewa/:id', (req, res) => {
+app.get('/db/sewa/:id', (req, res) => {
   const rentalId = req.params.id;
   const query = `
     SELECT penyewaan.*, gudang.name AS nama_gudang 
