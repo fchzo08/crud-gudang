@@ -253,7 +253,7 @@ app.get('/db/sewa/:id', (req, res) => {
 
 // Endpoint update sewa
 app.put('/db/sewa/:id',verifyToken, (req, res) => {
-    const { penyewa, status, } = req.body;
+    const { penyewa, status } = req.body;
     const id = req.params.id;
     if (!penyewa || !status) {
       return res.status(400).json({ message: 'column is missing' });
