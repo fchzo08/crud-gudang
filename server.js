@@ -301,20 +301,31 @@ app.get('/db/gudang/unused', (req, res) => {
       // Mendapatkan ID gudang yang digunakan
       const usedGudangIds = rentalResults.map(result => result.id_gudang);
 
-      // Mencari ID gudang yang tidak digunakan
-      const unusedGudangQuery = `
-        SELECT id_gudang, name
-        FROM gudang
-        WHERE id_gudang NOT IN (?);
-      `;
+      if (usedGudangIds.length === 0) {
+        // Jika tidak ada gudang yang digunakan, kembalikan semua gudang
+        mysqlConnection.query('SELECT id_gudang, name FROM gudang', (err, allGudangResults) => {
+          if (err) {
+            res.status(500).json({ message: 'Error fetching warehouses' });
+          } else {
+            res.json(allGudangResults);
+          }
+        });
+      } else {
+        // Mencari ID gudang yang tidak digunakan
+        const unusedGudangQuery = `
+          SELECT id_gudang, name
+          FROM gudang
+          WHERE id_gudang NOT IN (SELECT id_gudang FROM penyewaan);
+        `;
 
-      mysqlConnection.query(unusedGudangQuery, [usedGudangIds], (err, unusedResults) => {
-        if (err) {
-          res.status(500).json({ message: 'Error fetching unused warehouses' });
-        } else {
-          res.json(unusedResults);
-        }
-      });
+        mysqlConnection.query(unusedGudangQuery, (err, unusedResults) => {
+          if (err) {
+            res.status(500).json({ message: 'Error fetching unused warehouses' });
+          } else {
+            res.json(unusedResults);
+          }
+        });
+      }
     }
   });
 });
