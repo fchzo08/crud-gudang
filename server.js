@@ -285,6 +285,22 @@ app.delete('/db/sewa/:id',verifyToken, (req, res) => {
   });
 });
 
+// Endpoint gudang yang tidak terpakai
+app.get('/db/gudang/unused', (req, res) => {
+  mysqlConnection.query(`
+    SELECT gudang.*
+    FROM gudang
+    LEFT JOIN penyewaan ON gudang.id_gudang = penyewaan.id_gudang
+    WHERE penyewaan.id_gudang IS NULL;
+  `, (err, results) => {
+    if (err) {
+      res.status(500).json({ message: 'Error fetching unused warehouses'});
+    } else {
+      res.json(results);
+    }
+  });
+});
+
 const PORT = process.env.PORT || 8080;
 app.listen(PORT, () => {
   console.log(`server listening on port ${PORT}...`);
