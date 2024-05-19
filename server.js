@@ -288,10 +288,10 @@ app.delete('/db/sewa/:id',verifyToken, (req, res) => {
 // Endpoint gudang yang tidak terpakai
 app.get('/db/gudang/unused', (req, res) => {
   mysqlConnection.query(`
-    SELECT gudang.*
-    FROM gudang
-    WHERE gudang.id_gudang NOT IN (
-      SELECT DISTINCT id_gudang FROM penyewaan
+    SELECT DISTINCT id_gudang
+    FROM penyewaan
+    WHERE id_gudang NOT IN (
+      SELECT id_gudang FROM gudang
     );
   `, (err, results) => {
     if (err) {
