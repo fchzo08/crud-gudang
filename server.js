@@ -290,8 +290,9 @@ app.get('/db/gudang/unused', (req, res) => {
   mysqlConnection.query(`
     SELECT gudang.*
     FROM gudang
-    LEFT JOIN penyewaan ON gudang.id_gudang = penyewaan.id_gudang
-    WHERE penyewaan.id_gudang IS NULL;
+    WHERE gudang.id_gudang NOT IN (
+      SELECT DISTINCT id_gudang FROM penyewaan
+    );
   `, (err, results) => {
     if (err) {
       res.status(500).json({ message: 'Error fetching unused warehouses'});
