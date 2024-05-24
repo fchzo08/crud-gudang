@@ -195,6 +195,25 @@ app.post('/db/sewa',verifyToken, (req, res) => {
 );
 });
 
+//Endpoit sewa by id
+app.get('/db/sewa/:id', verifyToken, (req, res) => {
+  const id = req.params.id;
+  mysqlConnection.query(
+    'SELECT penyewaan.*, gudang.name AS nama_gudang FROM penyewaan JOIN gudang ON penyewaan.id_gudang = gudang.id_gudang WHERE penyewaan.id = ?;',
+    [id],
+    (err, results) => {
+      if (err) {
+        res.status(500).json({ message: 'Error fetching rental' });
+      } else {
+        if (results.length === 0) {
+          res.status(404).json({ message: 'Data not found' });
+        } else {
+          res.json(results[0]); // Mengembalikan data pertama (jika ada)
+        }
+      }
+    }
+  );
+});
 
 // Endpoint update sewa
 app.put('/db/sewa/:id', verifyToken, (req, res) => {
