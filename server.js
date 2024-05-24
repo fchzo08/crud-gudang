@@ -183,16 +183,29 @@ app.get('/db/sewa',verifyToken, (req, res) => {
 });
 
 //Endpoit addSewa
-app.post('/db/sewa',verifyToken, (req, res) => {
-  const { penyewa, id_gudang} = req.body;
-  mysqlConnection.query('INSERT INTO penyewaan (penyewa, id_gudang) VALUES (?, ?)', [penyewa, id_gudang], (err, results) => {
-    if(err) {
-      res.status(500).json({ message: 'Error fetching rental'});
-    }else{
-      res.status(201).json({ message: 'Rental successfully' });
+app.post('/db/sewa', verifyToken, (req, res) => {
+  const { penyewa, id_gudang } = req.body;
+  mysqlConnection.beginTransaction(err => {
+    if (err) {
+      return res.status(500).json({ message: 'Error beginning transaction' });
     }
-  }
-);
+
+    mysqlConnection.query('INSERT INTO penyewaan (penyewa, id_gudang) VALUES (?, ?)', [penyewa, id_gudang], (err, results) => {
+      if (err) {
+        mysqlConnection.rollback(() => {
+          res.status(500).json({ message: 'Error inserting rental' });
+        });
+      } else {
+        mysqlConnection.query('UPDATE gudang SET status = 1 WHERE id_gudang = ?', [id_gudang], (err, results) => {
+          if (err) {
+           res.status(500).json({ message: 'Error updating warehouse status' });
+          } else {
+          res.status(200).json({ message: 'Rental created successfully' });
+          }
+        });
+      }
+    });
+  });
 });
 
 //Endpoit sewa by id
