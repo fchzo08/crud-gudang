@@ -249,26 +249,29 @@ app.put('/db/sewa/:id', verifyToken, (req, res) => {
 });
 
 //endpoint delete penyewaan
-app.delete('/db/sewa/:id',verifyToken, (req, res) => {
+app.delete('/db/sewa/:id', verifyToken, (req, res) => {
   const id = req.params.id;
-  mysqlConnection.query('DELETE FROM penyewaan WHERE id_penyewaan = ?', [id], (err, result) => {
+  mysqlConnection.query('SELECT * FROM penyewaan WHERE id_penyewaan = ?', [id], (err, result) => {
     if (err) {
-      console.error('Error deleting rental:', err);
-      res.status(500).json({ message: 'Error deleting rental' });
+      res.status(500).json({ message: 'Error getting rental' });
+    } else if (result.length === 0) {
+      res.status(404).json({ message: 'Rental not found' });
     } else {
-      mysqlConnection.query('INSERT INTO penyewaan (penyewa, id_gudang) VALUES (?, ?)', [penyewa, id_gudang], (err, results) => {
-      if (err) {
-        mysqlConnection.rollback(() => {
-          res.status(500).json({ message: 'Error inserting rental' });
-        });
-      } else {
-        mysqlConnection.query('UPDATE gudang SET status = 1 WHERE id_gudang = ?', [id_gudang], (err, results) => {
-          if (err) {
-           res.status(500).json({ message: 'Error updating warehouse status' });
-          } else {
-          res.status(200).json({ message: 'Rental created successfully' });
-          }
-        });
+      const warehouseId = result[0].id_gudang; // Assuming id_gudang is the column name for warehouse ID
+
+      mysqlConnection.query('DELETE FROM penyewaan WHERE id_penyewaan = ?', [id], (err, result) => {
+        if (err) {
+          res.status(500).json({ message: 'Error deleting rental' });
+        } else {
+          mysqlConnection.query('UPDATE gudang SET status = 1 WHERE id_gudang = ?', [warehouseId], (err, results) => {
+            if (err) {
+              res.status(500).json({ message: 'Error updating warehouse status' });
+            } else {
+              res.status(200).json({ message: 'Rental deleted successfully' });
+            }
+          });
+        }
+      });
     }
   });
 });
