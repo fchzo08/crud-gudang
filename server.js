@@ -205,11 +205,7 @@ app.get('/db/sewa/:id', verifyToken, (req, res) => {
       if (err) {
         res.status(500).json({ message: 'Error fetching rental' });
       } else {
-        if (results.length === 0) {
-          res.status(404).json({ message: 'Data not found' });
-        } else {
-          res.json(results[0]); // Mengembalikan data pertama (jika ada)
-        }
+        res.json(results[0]);
       }
     }
   );
