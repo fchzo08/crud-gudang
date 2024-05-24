@@ -196,7 +196,7 @@ app.post('/db/sewa',verifyToken, (req, res) => {
 });
 
 //Endpoit sewa by id
-app.get('/db/sewa/:id', (req, res) => {
+app.get('/db/sewa/:id', verifyToken, (req, res) => {
   const rentalId = req.params.id;
   const query = `
     SELECT penyewaan.*, gudang.name AS nama_gudang 
