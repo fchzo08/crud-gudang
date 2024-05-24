@@ -107,7 +107,7 @@ app.post('/db/login', async (req, res) => {
 });
 
 // Endpoint getAllProfile
-app.get('/db/profile', (req, res) => {
+app.get('/db/profile',verifyToken, (req, res) => {
   
     mysqlConnection.query('SELECT * FROM user', (err, results) => {
       if (err) {
@@ -131,7 +131,7 @@ app.delete('/db/profile/:id',verifyToken, (req, res)=> {
 });
 
 //Endpoint getAllGudang
-app.get('/db/gudang', (req, res) => {
+app.get('/db/gudang',verifyToken, (req, res) => {
     mysqlConnection.query('SELECT * FROM gudang', (err, results) => {
       if (err) {
         res.status(500).json({ message: 'Error fetching warehouses'});
@@ -142,40 +142,23 @@ app.get('/db/gudang', (req, res) => {
 });
 
 //Endpoint add gudang
-app.post('/db/gudang', verifyToken, (req, res) => {
+app.post('/db/gudang',verifyToken, (req, res) => {
   const { name, address } = req.body;
-
   mysqlConnection.query(
       'INSERT INTO gudang (name, address) VALUES (?, ?)',
       [name, address],
       (err, result) => {
           if (err) {
-              console.error('Error creating warehouse:', err);
               res.status(500).json({ message: 'Error creating warehouse' });
           } else {
-              const id_gudang = result.insertId; // Mengambil ID gudang yang baru dibuat
-
-              mysqlConnection.query(
-                  'INSERT INTO penyewaan (id_gudang) VALUES (?)',
-                  [id_gudang],
-                  (err) => {
-                      if (err) {
-                          console.error('Error creating rental entry:', err);
-                          res.status(500).json({ message: 'Error creating rental entry' });
-                      } else {
-                          res.status(201).json({ message: 'Warehouse created successfully' });
-                      }
-                  }
-              );
               res.status(201).json({ message: 'Warehouse created successfully' });
-
           }
       }
   );
 });
 
 //endpoint delete gudang
-app.delete('/db/gudang/:id',verifyToken, (req, res) => {
+app.delete('/db/gudang/:id', verifyToken, (req, res) => {
     const id = req.params.id;
     mysqlConnection.query('DELETE FROM gudang WHERE id_gudang = ?', [id], (err, result) => {
       if (err) {
@@ -188,7 +171,7 @@ app.delete('/db/gudang/:id',verifyToken, (req, res) => {
 });
 
 //Endpoint getAllSewa
-app.get('/db/sewa', (req, res) => {
+app.get('/db/sewa',verifyToken, (req, res) => {
   mysqlConnection.query(
     'SELECT penyewaan.*, gudang.name AS nama_gudang FROM penyewaan JOIN gudang ON penyewaan.id_gudang = gudang.id_gudang;', (err, results) => {
     if (err) {
@@ -199,68 +182,30 @@ app.get('/db/sewa', (req, res) => {
   });
 });
 
-app.post('/db/sewa', verifyToken, (req, res) => {
-  const { penyewa, id_gudang, status } = req.body;
-
-  // Check if the warehouse is already in use
-  mysqlConnection.query(
-    'SELECT COUNT(*) AS count FROM `penyewaan` WHERE `id_gudang` = ? ',
-    [id_gudang],
-    (err, results) => {
-      if (err) {
-        console.error('Error checking warehouse status:', err);
-        return res.status(500).json({ message: 'Error checking warehouse status' });
-      }
-
-      if (results[0].count > 0) {
-        // The warehouse is already in use
-        return res.status(400).json({ message: 'Warehouse is already in use' });
-      }
-
-      // The warehouse is available, proceed with the rental entry creation
-      mysqlConnection.query(
-        'INSERT INTO `penyewaan`(`penyewa`, `id_gudang`, `status`) VALUES (?, ?, ?)',
-        [penyewa, id_gudang, status],
-        (err) => {
-          if (err) {
-            console.error('Error creating rental entry:', err);
-            return res.status(500).json({ message: 'Error creating rental entry' });
-          }
-          res.status(201).json({ message: ' rental entry created successfully' });
-        }
-      );
+//Endpoit addSewa
+app.post('/db/sewa',verifyToken, (req, res) => {
+  const { penyewa, id_gudang} = req.body;
+  mysqlConnection.query('INSERT INTO penyewaan (penyewa, id_gudang) VALUES (?, ?)', [penyewa, id_gudang], (err, results) => {
+    if(err) {
+      res.status(500).json({ message: 'Error fetching rental'});
+    }else{
+      res.status(201).json({ message: 'Rental successfully' });
     }
-  );
+  }
+);
 });
 
-app.get('/db/sewa/:id', (req, res) => {
-  const rentalId = req.params.id;
-  const query = `
-    SELECT penyewaan.*, gudang.name AS nama_gudang 
-    FROM penyewaan 
-    JOIN gudang ON penyewaan.id_gudang = gudang.id_gudang 
-    WHERE penyewaan.id_penyewaan = ?;
-  `;
-
-  mysqlConnection.query(query, [rentalId], (err, results) => {
-    if (err) {
-      res.status(500).json({ message: 'Error fetching rental' });
-    } else {
-      res.json(results);
-    }
-  });
-});
 
 // Endpoint update sewa
-app.put('/db/sewa/:id',verifyToken, (req, res) => {
+app.put('/db/sewa/:id', verifyToken, (req, res) => {
     const { penyewa, status } = req.body;
     const id = req.params.id;
-    if (!penyewa || !status) {
+    if (!penyewa) {
       return res.status(400).json({ message: 'column is missing' });
   }
     mysqlConnection.query(
-      'UPDATE penyewaan SET penyewa = ?, status = ? WHERE id_penyewaan = ?',
-      [penyewa, status, id],
+      'UPDATE penyewaan SET penyewa = ? WHERE id_penyewaan = ?',
+      [penyewa, id],
       (err, result) => {
         if (err) {
           console.error('Error undate rental entry:', err);
