@@ -257,13 +257,13 @@ app.delete('/db/sewa/:id', verifyToken, (req, res) => {
     } else if (result.length === 0) {
       res.status(404).json({ message: 'Rental not found' });
     } else {
-      const warehouseId = result[0].id_gudang; // Assuming id_gudang is the column name for warehouse ID
+      const warehouseId = result[0].id_gudang;
 
       mysqlConnection.query('DELETE FROM penyewaan WHERE id_penyewaan = ?', [id], (err, result) => {
         if (err) {
           res.status(500).json({ message: 'Error deleting rental' });
         } else {
-          mysqlConnection.query('UPDATE gudang SET status = 1 WHERE id_gudang = ?', [warehouseId], (err, results) => {
+          mysqlConnection.query('UPDATE gudang SET status = 0 WHERE id_gudang = ?', [warehouseId], (err, results) => {
             if (err) {
               res.status(500).json({ message: 'Error updating warehouse status' });
             } else {
