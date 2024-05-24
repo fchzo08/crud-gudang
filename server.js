@@ -256,7 +256,19 @@ app.delete('/db/sewa/:id',verifyToken, (req, res) => {
       console.error('Error deleting rental:', err);
       res.status(500).json({ message: 'Error deleting rental' });
     } else {
-      res.status(201).json({ message: 'rental deleted successfully' });
+      mysqlConnection.query('INSERT INTO penyewaan (penyewa, id_gudang) VALUES (?, ?)', [penyewa, id_gudang], (err, results) => {
+      if (err) {
+        mysqlConnection.rollback(() => {
+          res.status(500).json({ message: 'Error inserting rental' });
+        });
+      } else {
+        mysqlConnection.query('UPDATE gudang SET status = 1 WHERE id_gudang = ?', [id_gudang], (err, results) => {
+          if (err) {
+           res.status(500).json({ message: 'Error updating warehouse status' });
+          } else {
+          res.status(200).json({ message: 'Rental created successfully' });
+          }
+        });
     }
   });
 });
