@@ -73,32 +73,26 @@ app.post('/db/login', async (req, res) => {
       [username],
       async (err, results) => {
           if (err) {
-              // Database query error
               console.error('Error logging in:', err);
               res.status(500).json({ message: 'Error logging in' });
           } else {
-              // Check if user with the given username exists
               if (results.length === 0) {
                   res.status(401).json({ message: 'Invalid username or password' });
                   return;
               }
-
               const user = results[0];
-
               const passwordMatch = await bcrypt.compare(password, user.password);
-
               if (passwordMatch) {
                   axios.post('https://auth-gudang-dot-f-03-415104.et.r.appspot.com/a/getToken', { userId: user.id_user })
                       .then(response => {
                           const { token } = response.data;
-                          res.json({ message: 'Login successful', token });
+                          res.status(200).json({ message: 'Login successful', token });
                       })
                       .catch(error => {
                           console.error('Error getting token:', error);
                           res.status(500).json({ message: 'Error getting token' });
                       });
               } else {
-                  // Passwords do not match
                   res.status(401).json({ message: 'Invalid username or password' });
               }
           }
@@ -113,7 +107,7 @@ app.get('/db/profile',verifyToken, (req, res) => {
       if (err) {
         res.status(500).json({ message: 'Error fetching profile' });
       } else {
-        res.json(results);
+        res.status(200).json(results);
       }
     })
 });
@@ -136,7 +130,7 @@ app.get('/db/gudang',verifyToken, (req, res) => {
       if (err) {
         res.status(500).json({ message: 'Error fetching warehouses'});
       } else {
-        res.json(results);
+        res.status(200).json(results);
       }
     });
 });
@@ -177,7 +171,7 @@ app.get('/db/sewa',verifyToken, (req, res) => {
     if (err) {
       res.status(500).json({ message: 'Error fetching rental'});
     } else {
-      res.json(results);
+      res.status(200).json(results);
     }
   });
 });
@@ -200,7 +194,7 @@ app.post('/db/sewa', verifyToken, (req, res) => {
           if (err) {
            res.status(500).json({ message: 'Error updating warehouse status' });
           } else {
-          res.status(200).json({ message: 'Rental created successfully' });
+          res.status(201).json({ message: 'Rental created successfully' });
           }
         });
       }
@@ -208,7 +202,7 @@ app.post('/db/sewa', verifyToken, (req, res) => {
   });
 });
 
-//Endpoit sewa by id
+//Endpoit  GetSewaById
 app.get('/db/sewa/:id', verifyToken, (req, res) => {
   const rentalId = req.params.id;
   const query = `
@@ -222,14 +216,14 @@ app.get('/db/sewa/:id', verifyToken, (req, res) => {
     if (err) {
       res.status(500).json({ message: 'Error fetching rental' });
     } else {
-      res.json(results);
+      res.status(200).json(results);
     }
   });
 });
 
 // Endpoint update sewa
 app.put('/db/sewa/:id', verifyToken, (req, res) => {
-    const { penyewa, status } = req.body;
+    const { penyewa } = req.body;
     const id = req.params.id;
     if (!penyewa) {
       return res.status(400).json({ message: 'column is missing' });
@@ -248,7 +242,7 @@ app.put('/db/sewa/:id', verifyToken, (req, res) => {
     );
 });
 
-//endpoint delete penyewaan
+//endpoint delete sewa
 app.delete('/db/sewa/:id', verifyToken, (req, res) => {
   const id = req.params.id;
   mysqlConnection.query('SELECT * FROM penyewaan WHERE id_penyewaan = ?', [id], (err, result) => {
