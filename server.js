@@ -261,7 +261,7 @@ app.delete('/db/sewa/:id', verifyToken, (req, res) => {
             if (err) {
               res.status(500).json({ message: 'Error updating warehouse status' });
             } else {
-              res.status(200).json({ message: 'Rental deleted successfully' });
+              res.status(201).json({ message: 'Rental deleted successfully' });
             }
           });
         }
