@@ -83,7 +83,7 @@ app.post('/db/login', async (req, res) => {
 
   // Memeriksa apakah username atau password kosong
   if (!username || !password) {
-      return res.status(400).json({ message: 'Username or password is missing' });
+      return res.json({ message: 'Username or password is missing' });
   }
 
   mysqlConnection.query(
@@ -95,7 +95,7 @@ app.post('/db/login', async (req, res) => {
               res.status(500).json({ message: 'Error logging in' });
           } else {
               if (results.length === 0) {
-                  res.status(401).json({ message: 'Invalid username or password' });
+                  res.json({ message: 'Invalid username or password' });
                   return;
               }
               const user = results[0];
