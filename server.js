@@ -54,7 +54,7 @@ app.post('/db/register', async (req, res) => {
       });
 
       if (userCheckResult.length > 0) {
-          return res.status(400).json({ message: 'Username not available' });
+          return res.json({ message: 'Username not available' });
       }
 
       const hashedPassword = await bcrypt.hash(password, 10);
