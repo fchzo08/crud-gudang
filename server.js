@@ -36,26 +36,44 @@ app.get('/',(req, res) => {
 
 // Endpoint register
 app.post('/db/register', async (req, res) => {
-    const { username, password } = req.body;
-    
-    if (!username || !password) {
+  const { username, password } = req.body;
+
+  if (!username || !password) {
       return res.status(400).json({ message: 'Username or password is missing' });
   }
 
-    // Hash password sebelum disimpan ke database
-    const hashedPassword = await bcrypt.hash(password, 10);
-    
-    mysqlConnection.query(
-      'INSERT INTO user (username, password) VALUES (?, ?)',
-      [username, hashedPassword], 
-      async (err, result) => {
-        if(err) {
-          console.error('Error registering user:', err);
-          res.status(500).json({ message: 'Error registering user'});
-        } else {
-          res.status(201).json({ message: 'registered successfully' });
-        }
-    })
+  try {
+      const userCheckResult = await new Promise((resolve, reject) => {
+          mysqlConnection.query('SELECT * FROM user WHERE username = ?', [username], (err, result) => {
+              if (err) {
+                  reject(err);
+              } else {
+                  resolve(result);
+              }
+          });
+      });
+
+      if (userCheckResult.length > 0) {
+          return res.status(400).json({ message: 'Username not available' });
+      }
+
+      const hashedPassword = await bcrypt.hash(password, 10);
+
+      await new Promise((resolve, reject) => {
+          mysqlConnection.query('INSERT INTO user (username, password) VALUES (?, ?)', [username, hashedPassword], (err, result) => {
+              if (err) {
+                  reject(err);
+              } else {
+                  resolve(result);
+              }
+          });
+      });
+
+      res.status(201).json({ message: 'Registered successfully' });
+  } catch (err) {
+      console.error('Error during registration:', err);
+      res.status(500).json({ message: 'Error registering user' });
+  }
 });
 
 //Endpoint login
@@ -100,8 +118,8 @@ app.post('/db/login', async (req, res) => {
   );
 });
 
-// Endpoint getAllProfile ,verifyToken
-app.get('/db/profile', (req, res) => {
+// Endpoint getAllProfile 
+app.get('/db/profile', verifyToken, (req, res) => {
   
     mysqlConnection.query('SELECT * FROM user', (err, results) => {
       if (err) {
