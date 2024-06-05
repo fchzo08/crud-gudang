@@ -100,8 +100,8 @@ app.post('/db/login', async (req, res) => {
   );
 });
 
-// Endpoint getAllProfile
-app.get('/db/profile',verifyToken, (req, res) => {
+// Endpoint getAllProfile ,verifyToken
+app.get('/db/profile', (req, res) => {
   
     mysqlConnection.query('SELECT * FROM user', (err, results) => {
       if (err) {
